@@ -1,0 +1,440 @@
+<!DOCTYPE html>
+<html lang="ca">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Meta Quest Web Launch URL Generator</title>
+    <!-- Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- Font Awesome Icons -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <!-- QR Code Library -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
+    <!-- Google Fonts (Inter) -->
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <style>
+        body {
+            font-family: 'Inter', sans-serif;
+        }
+        .glass-panel {
+            background: rgba(255, 255, 255, 0.85);
+            backdrop-filter: blur(12px);
+            border: 1px solid rgba(255, 255, 255, 0.3);
+        }
+        .dark .glass-panel {
+            background: rgba(30, 41, 59, 0.85);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+        }
+    </style>
+</head>
+<body class="bg-slate-900 text-slate-100 min-h-screen flex flex-col justify-between transition-colors duration-300">
+
+    <!-- Capçalera / Header -->
+    <header class="border-b border-slate-800 bg-slate-950/50 backdrop-blur sticky top-0 z-50">
+        <div class="max-w-6xl mx-auto px-4 py-4 flex items-center justify-between">
+            <div class="flex items-center space-x-3">
+                <div class="bg-gradient-to-tr from-blue-600 to-indigo-500 p-2.5 rounded-xl text-white shadow-lg shadow-blue-500/20">
+                    <i class="fa-solid fa-vr-cardboard text-xl"></i>
+                </div>
+                <div>
+                    <h1 class="font-bold text-lg leading-tight text-white">Meta Quest Web Launcher</h1>
+                    <p class="text-xs text-slate-400">Generador d'enllaços d'obertura web per a Oculus / Quest</p>
+                </div>
+            </div>
+            <div class="flex items-center space-x-2">
+                <a href="https://developer.oculus.com" target="_blank" rel="noopener noreferrer" 
+                   class="text-xs text-slate-400 hover:text-blue-400 transition-colors flex items-center space-x-1 px-3 py-1.5 rounded-lg border border-slate-800 hover:border-slate-700">
+                    <i class="fa-solid fa-book"></i>
+                    <span class="hidden sm:inline">Documentació</span>
+                </a>
+            </div>
+        </div>
+    </header>
+
+    <!-- Contingut Principal -->
+    <main class="max-w-6xl mx-auto px-4 py-8 flex-grow w-full grid grid-cols-1 lg:grid-cols-12 gap-8">
+        
+        <!-- Columna Esquerra: Formulari i Control -->
+        <div class="lg:col-span-7 space-y-6">
+            
+            <!-- Card Principal de Generació -->
+            <div class="bg-slate-800/60 border border-slate-700/60 rounded-2xl p-6 shadow-xl backdrop-blur">
+                <h2 class="text-lg font-semibold text-white mb-4 flex items-center gap-2">
+                    <i class="fa-solid fa-link text-blue-400"></i>
+                    Generar URL d'Obertura Web
+                </h2>
+
+                <!-- Input Form -->
+                <div class="space-y-4">
+                    <div>
+                        <label for="inputUrl" class="block text-xs font-medium text-slate-300 uppercase tracking-wider mb-2">
+                            URL de Destí (Ha de començar per HTTPS)
+                        </label>
+                        <div class="relative rounded-xl shadow-sm">
+                            <div class="absolute inset-y-0 left-0 pl-3.5 flex items-center pointer-events-none text-slate-400">
+                                <i class="fa-solid fa-globe"></i>
+                            </div>
+                            <input type="url" id="inputUrl" value="https://www.meta.com" 
+                                   placeholder="https://el-teu-lloc-web.com"
+                                   class="block w-full pl-10 pr-12 py-3 bg-slate-900/90 border border-slate-700 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-blue-500 text-slate-100 placeholder-slate-500 text-sm transition-all" />
+                            <button id="clearBtn" class="absolute inset-y-0 right-0 pr-3 flex items-center text-slate-400 hover:text-slate-200">
+                                <i class="fa-solid fa-xmark"></i>
+                            </button>
+                        </div>
+                    </div>
+
+                    <!-- Botons d'acció ràpida predefinits -->
+                    <div>
+                        <span class="text-xs text-slate-400 mb-2 block">Proves ràpides:</span>
+                        <div class="flex flex-wrap gap-2">
+                            <button data-url="https://www.meta.com" class="preset-btn px-3 py-1 bg-slate-700/50 hover:bg-slate-700 text-slate-300 text-xs rounded-lg border border-slate-600/50 transition">Meta.com</button>
+                            <button data-url="https://www.youtube.com/vr" class="preset-btn px-3 py-1 bg-slate-700/50 hover:bg-slate-700 text-slate-300 text-xs rounded-lg border border-slate-600/50 transition">YouTube VR</button>
+                            <button data-url="https://sketchfab.com" class="preset-btn px-3 py-1 bg-slate-700/50 hover:bg-slate-700 text-slate-300 text-xs rounded-lg border border-slate-600/50 transition">Sketchfab 3D</button>
+                            <button data-url="http://insecure-site.com" class="preset-btn px-3 py-1 bg-rose-900/30 hover:bg-rose-900/50 text-rose-300 text-xs rounded-lg border border-rose-700/50 transition">Test HTTP (Error)</button>
+                        </div>
+                    </div>
+
+                    <!-- Missatges d'Error o Confirmació -->
+                    <div id="statusMessage" class="hidden p-3 rounded-xl text-xs flex items-center gap-2"></div>
+
+                    <!-- Accions principals -->
+                    <div class="flex flex-col sm:flex-row gap-3 pt-2">
+                        <button id="generateBtn" class="flex-1 bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-500 hover:to-indigo-500 text-white font-medium py-2.5 px-4 rounded-xl shadow-lg shadow-blue-500/20 text-xs flex items-center justify-center gap-2 transition active:scale-[0.98]">
+                            <i class="fa-solid fa-gear"></i> Generar Enllaç
+                        </button>
+                        <button id="launchBtn" class="flex-1 bg-emerald-600 hover:bg-emerald-500 text-white font-medium py-2.5 px-4 rounded-xl shadow-lg shadow-emerald-500/20 text-xs flex items-center justify-center gap-2 transition active:scale-[0.98]">
+                            <i class="fa-solid fa-rocket"></i> Executar Web Launch
+                        </button>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Resultat i Codi de la URL Generada -->
+            <div class="bg-slate-800/60 border border-slate-700/60 rounded-2xl p-6 shadow-xl backdrop-blur space-y-4">
+                <h3 class="text-sm font-semibold text-slate-300 uppercase tracking-wider">Resultat URL Meta Quest</h3>
+                
+                <div class="bg-slate-950/80 p-4 rounded-xl border border-slate-800 relative group">
+                    <p id="resultUrl" class="font-mono text-xs text-blue-400 break-all select-all pr-10">
+                        https://www.oculus.com/open_url/?url=https%3A%2F%2Fwww.meta.com
+                    </p>
+                    <button id="copyBtn" title="Copiar URL" class="absolute top-3 right-3 p-2 bg-slate-800 hover:bg-slate-700 text-slate-300 rounded-lg text-xs transition">
+                        <i class="fa-regular fa-copy"></i>
+                    </button>
+                </div>
+
+                <div class="flex items-center justify-between text-xs text-slate-400 pt-1">
+                    <span>Estructura de la petició:</span>
+                    <span class="font-mono text-slate-300 bg-slate-900 px-2 py-0.5 rounded border border-slate-800">oculus.com/open_url/?url=...</span>
+                </div>
+            </div>
+
+            <!-- Codi JavaScript utilitzat -->
+            <div class="bg-slate-800/60 border border-slate-700/60 rounded-2xl p-6 shadow-xl backdrop-blur">
+                <div class="flex justify-between items-center mb-3">
+                    <h3 class="text-sm font-semibold text-slate-300 uppercase tracking-wider flex items-center gap-2">
+                        <i class="fa-brands fa-js text-yellow-400"></i>
+                        Codi utilitzat (JavaScript)
+                    </h3>
+                </div>
+                <pre class="bg-slate-950 p-4 rounded-xl text-xs font-mono text-emerald-400 overflow-x-auto border border-slate-800 leading-relaxed">
+<span class="text-purple-400">function</span> <span class="text-blue-400">createWebLaunchUrl</span>(linkUrl) {
+  <span class="text-purple-400">const</span> targetUrl = <span class="text-purple-400">new</span> <span class="text-yellow-300">URL</span>(linkUrl);
+  <span class="text-purple-400">if</span> (targetUrl.protocol !== <span class="text-emerald-300">"https:"</span>) {
+    <span class="text-purple-400">throw new</span> <span class="text-yellow-300">TypeError</span>(<span class="text-emerald-300">"Web Launch targets must use HTTPS."</span>);
+  }
+
+  <span class="text-purple-400">const</span> webLaunchUrl = <span class="text-purple-400">new</span> <span class="text-yellow-300">URL</span>(<span class="text-emerald-300">"https://www.oculus.com/open_url/"</span>);
+  webLaunchUrl.searchParams.<span class="text-blue-300">set</span>(<span class="text-emerald-300">"url"</span>, targetUrl.<span class="text-blue-300">toString</span>());
+  <span class="text-purple-400">return</span> webLaunchUrl.<span class="text-blue-300">toString</span>();
+}</pre>
+            </div>
+        </div>
+
+        <!-- Columna Dreta: Vista prèvia QR i Historial -->
+        <div class="lg:col-span-5 space-y-6">
+            
+            <!-- Targeta Codi QR -->
+            <div class="bg-slate-800/60 border border-slate-700/60 rounded-2xl p-6 shadow-xl backdrop-blur text-center flex flex-col items-center">
+                <h3 class="text-sm font-semibold text-slate-300 uppercase tracking-wider mb-2">Escriu o Escaneja amb les Quest</h3>
+                <p class="text-xs text-slate-400 mb-4">Escaneja aquest codi QR des de la càmera del mòbil o de les Oculus Quest per obrir l'enllaç directament.</p>
+                
+                <div id="qrcode" class="p-4 bg-white rounded-2xl shadow-inner border border-slate-200 min-h-[192px] min-w-[192px] flex items-center justify-center"></div>
+
+                <div id="qrCaption" class="mt-3 text-xs text-slate-400 font-mono truncate max-w-full px-2">
+                    https://www.meta.com
+                </div>
+            </div>
+
+            <!-- Historial d'enllaços generats -->
+            <div class="bg-slate-800/60 border border-slate-700/60 rounded-2xl p-6 shadow-xl backdrop-blur">
+                <div class="flex items-center justify-between mb-4">
+                    <h3 class="text-sm font-semibold text-slate-300 uppercase tracking-wider flex items-center gap-2">
+                        <i class="fa-solid fa-clock-rotate-left text-indigo-400"></i>
+                        Historial Recent
+                    </h3>
+                    <button id="clearHistoryBtn" class="text-xs text-slate-400 hover:text-rose-400 transition">Esborrar</button>
+                </div>
+
+                <div id="historyList" class="space-y-2 max-h-56 overflow-y-auto pr-1">
+                    <p class="text-xs text-slate-500 text-center py-4">Cap enllaç generat recentment.</p>
+                </div>
+            </div>
+
+            <!-- Guia ràpida -->
+            <div class="bg-blue-950/30 border border-blue-900/40 rounded-2xl p-5 text-xs text-blue-200/80 space-y-2">
+                <h4 class="font-semibold text-blue-300 flex items-center gap-1.5">
+                    <i class="fa-solid fa-circle-info"></i>
+                    Com funciona el Web Launch?
+                </h4>
+                <p>
+                    Aquest sistema permet llançar llocs web directament al navegador de Meta Quest des d'enllaços externs o codis QR. Per motius de seguretat, Oculus exigeix obligatòriament que la URL de destí faci servir el protocol <strong>HTTPS</strong>.
+                </p>
+            </div>
+        </div>
+
+    </main>
+
+    <!-- Peu de pàgina / Footer -->
+    <footer class="border-t border-slate-800 bg-slate-950/40 py-4 mt-auto">
+        <div class="max-w-6xl mx-auto px-4 text-center text-xs text-slate-500">
+            Aplicació de demostració per a la funció <code>createWebLaunchUrl</code> • Oculus / Meta Quest Web Launch Utility
+        </div>
+    </footer>
+
+    <!-- Notificació Toast -->
+    <div id="toast" class="fixed bottom-5 right-5 bg-slate-800 text-slate-100 border border-slate-700 px-4 py-3 rounded-xl shadow-2xl flex items-center gap-3 transition-all duration-300 opacity-0 translate-y-5 pointer-events-none z-50">
+        <i id="toastIcon" class="fa-solid fa-circle-check text-emerald-400"></i>
+        <span id="toastMessage" class="text-sm font-medium">Text de la notificació</span>
+    </div>
+
+    <!-- Script Principal de l'Aplicació -->
+    <script>
+        // Funció principal sol·licitada
+        function createWebLaunchUrl(linkUrl) {
+            const targetUrl = new URL(linkUrl);
+            if (targetUrl.protocol !== "https:") {
+                throw new TypeError("Web Launch targets must use HTTPS.");
+            }
+
+            const webLaunchUrl = new URL("https://www.oculus.com/open_url/");
+            webLaunchUrl.searchParams.set("url", targetUrl.toString());
+            return webLaunchUrl.toString();
+        }
+
+        // Estat i referències del DOM
+        const inputUrl = document.getElementById('inputUrl');
+        const generateBtn = document.getElementById('generateBtn');
+        const launchBtn = document.getElementById('launchBtn');
+        const resultUrl = document.getElementById('resultUrl');
+        const copyBtn = document.getElementById('copyBtn');
+        const clearBtn = document.getElementById('clearBtn');
+        const statusMessage = document.getElementById('statusMessage');
+        const qrCodeContainer = document.getElementById('qrcode');
+        const qrCaption = document.getElementById('qrCaption');
+        const historyList = document.getElementById('historyList');
+        const clearHistoryBtn = document.getElementById('clearHistoryBtn');
+        const presetBtns = document.querySelectorAll('.preset-btn');
+
+        let qrcodeObj = null;
+        let history = JSON.parse(localStorage.getItem('quest_launch_history') || '[]');
+
+        // Inicialització
+        window.onload = function() {
+            initQRCode();
+            updateHistoryUI();
+            processUrl();
+        };
+
+        // Inicialitza el component del Codi QR
+        function initQRCode() {
+            qrcodeObj = new QRCode(qrCodeContainer, {
+                text: "https://www.meta.com",
+                width: 170,
+                height: 170,
+                colorDark : "#0f172a",
+                colorLight : "#ffffff",
+                correctLevel : QRCode.CorrectLevel.H
+            });
+        }
+
+        // Processa la URL introduïda
+        function processUrl() {
+            const rawUrl = inputUrl.value.trim();
+            
+            // Ocultar missatges previs
+            statusMessage.classList.add('hidden');
+            
+            if (!rawUrl) {
+                showStatus("S'ha d'introduir una URL.", "error");
+                return null;
+            }
+
+            try {
+                const finalUrl = createWebLaunchUrl(rawUrl);
+                
+                // Actualitzar UI amb la URL generada
+                resultUrl.textContent = finalUrl;
+                qrCaption.textContent = rawUrl;
+
+                // Actualitzar QR Code amb la URL d'origen (rawUrl) en comptes de la de launch d'Oculus
+                if (qrcodeObj) {
+                    qrcodeObj.clear();
+                    qrcodeObj.makeCode(rawUrl);
+                }
+
+                showStatus("URL generada amb èxit!", "success");
+                addToHistory(rawUrl, finalUrl);
+                return finalUrl;
+
+            } catch (error) {
+                resultUrl.textContent = "Error: no s'ha pogut generar l'enllaç.";
+                showStatus(error.message, "error");
+                return null;
+            }
+        }
+
+        // Mostra missatges d'estat a la interfície
+        function showStatus(text, type) {
+            statusMessage.classList.remove('hidden', 'bg-emerald-950/50', 'text-emerald-300', 'border-emerald-800', 'bg-rose-950/50', 'text-rose-300', 'border-rose-800');
+            
+            if (type === 'success') {
+                statusMessage.classList.add('bg-emerald-950/50', 'text-emerald-300', 'border', 'border-emerald-800');
+                statusMessage.innerHTML = `<i class="fa-solid fa-circle-check text-emerald-400"></i> ${text}`;
+            } else {
+                statusMessage.classList.add('bg-rose-950/50', 'text-rose-300', 'border', 'border-rose-800');
+                statusMessage.innerHTML = `<i class="fa-solid fa-triangle-exclamation text-rose-400"></i> ${text}`;
+            }
+        }
+
+        // Executa l'obertura de la URL
+        function launchUrl() {
+            const generatedUrl = processUrl();
+            if (generatedUrl) {
+                // S'utilitza assign tal com es demana a l'especificació
+                window.location.assign(generatedUrl);
+            } else {
+                showToast("No es pot obrir l'enllaç per un error de validació.", "error");
+            }
+        }
+
+        // Gestió de l'historial
+        function addToHistory(original, generated) {
+            // Evitar duplicats consecutius
+            if (history.length > 0 && history[0].original === original) return;
+
+            history.unshift({ original, generated, date: new Date().toLocaleTimeString() });
+            if (history.length > 10) history.pop();
+
+            localStorage.setItem('quest_launch_history', JSON.stringify(history));
+            updateHistoryUI();
+        }
+
+        function updateHistoryUI() {
+            if (history.length === 0) {
+                historyList.innerHTML = `<p class="text-xs text-slate-500 text-center py-4">Cap enllaç generat recentment.</p>`;
+                return;
+            }
+
+            historyList.innerHTML = history.map((item, index) => `
+                <div class="p-2.5 bg-slate-900/80 hover:bg-slate-900 border border-slate-800/80 rounded-xl flex items-center justify-between text-xs transition group">
+                    <div class="truncate pr-2 max-w-[80%]">
+                        <div class="font-medium text-slate-200 truncate">${escapeHtml(item.original)}</div>
+                        <div class="text-[10px] text-slate-500">${item.date}</div>
+                    </div>
+                    <button onclick="useHistoryItem(${index})" class="px-2 py-1 bg-slate-800 hover:bg-blue-600 text-slate-300 hover:text-white rounded-lg transition text-[11px] flex items-center gap-1">
+                        <i class="fa-solid fa-arrow-up-right-from-square"></i> Carregar
+                    </button>
+                </div>
+            `).join('');
+        }
+
+        window.useHistoryItem = function(index) {
+            const item = history[index];
+            if (item) {
+                inputUrl.value = item.original;
+                processUrl();
+                showToast("URL carregada des de l'historial", "info");
+            }
+        };
+
+        // Funció auxiliar per evitar XSS
+        function escapeHtml(str) {
+            return str.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;").replace(/"/g, "&quot;").replace(/'/g, "&#039;");
+        }
+
+        // Mostrar notificació Toast
+        function showToast(message, type = 'success') {
+            const toast = document.getElementById('toast');
+            const toastMessage = document.getElementById('toastMessage');
+            const toastIcon = document.getElementById('toastIcon');
+
+            toastMessage.textContent = message;
+
+            if (type === 'success') {
+                toastIcon.className = 'fa-solid fa-circle-check text-emerald-400';
+            } else if (type === 'error') {
+                toastIcon.className = 'fa-solid fa-circle-xmark text-rose-400';
+            } else {
+                toastIcon.className = 'fa-solid fa-circle-info text-blue-400';
+            }
+
+            toast.classList.remove('opacity-0', 'translate-y-5', 'pointer-events-none');
+
+            setTimeout(() => {
+                toast.classList.add('opacity-0', 'translate-y-5', 'pointer-events-none');
+            }, 3000);
+        }
+
+        // Esdeveniments
+        if (generateBtn) {
+            generateBtn.addEventListener('click', () => {
+                processUrl();
+                showToast("Enllaç processat correctament.");
+            });
+        }
+
+        if (launchBtn) {
+            launchBtn.addEventListener('click', launchUrl);
+        }
+
+        inputUrl.addEventListener('keypress', (e) => {
+            if (e.key === 'Enter') {
+                processUrl();
+            }
+        });
+
+        clearBtn.addEventListener('click', () => {
+            inputUrl.value = '';
+            inputUrl.focus();
+        });
+
+        copyBtn.addEventListener('click', () => {
+            const textToCopy = resultUrl.textContent.trim();
+            const tempInput = document.createElement('textarea');
+            tempInput.value = textToCopy;
+            document.body.appendChild(tempInput);
+            tempInput.select();
+            document.execCommand('copy');
+            document.body.removeChild(tempInput);
+            showToast("URL copiada al portapapers!");
+        });
+
+        clearHistoryBtn.addEventListener('click', () => {
+            history = [];
+            localStorage.removeItem('quest_launch_history');
+            updateHistoryUI();
+            showToast("Historial esborrat.");
+        });
+
+        presetBtns.forEach(btn => {
+            btn.addEventListener('click', () => {
+                const presetUrl = btn.getAttribute('data-url');
+                if (presetUrl) {
+                    inputUrl.value = presetUrl;
+                    processUrl();
+                }
+            });
+        });
+    </script>
+</body>
+</html>
